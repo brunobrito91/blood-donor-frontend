@@ -3,12 +3,14 @@ import './App.css';
 import 'antd/dist/antd.css';
 import axios from 'axios';
 import React, {Component} from 'react';
-import {Divider, Table} from "antd";
+import {Button, Divider, Table, Upload, message} from "antd";
+import UploadOutlined from "@ant-design/icons/es/icons/UploadOutlined";
 
 
 class App extends Component {
     state = {
         selectedFile: null,
+        uploading: false,
         donorResult: null
     };
 
@@ -20,22 +22,35 @@ class App extends Component {
     };
 
     onFileUpload = () => {
-        const formData = new FormData();
+        const { selectedFile } = this.state;
 
+        const formData = new FormData();
         formData.append(
             "file",
-            this.state.selectedFile,
-            this.state.selectedFile.name
+            selectedFile,
+            selectedFile.name
         );
 
+        this.setState({
+            uploading: true,
+        });
 
         axios
             .post("http://localhost:8081/donor/batch", formData)
             .then((response) => {
                 console.log('donorResult: ', response);
-                this.setState({selectedFile: null, donorResult: response.data});
+                this.setState({
+                    selectedFile: null,
+                    uploading: false,
+                    donorResult: response.data
+                });
+                message.success('upload successfully.');
             }, (error) => {
                 console.log(error);
+                this.setState({
+                    uploading: false,
+                });
+                message.error('upload failed.');
             });
     };
 
@@ -161,6 +176,21 @@ class App extends Component {
 
     render() {
         console.log("render");
+        const { uploading, selectedFile } = this.state;
+        const props = {
+            onRemove: file => {
+                this.setState({selectedFile: null, donorResult: null});
+                message.info("file removed");
+                console.log("file removed");
+            },
+            beforeUpload: file => {
+                this.setState({selectedFile: file});
+                message.info("file selected");
+                console.log("file selected");
+                return false;
+            },
+            selectedFile,
+        };
         return (
             <div className="App">
                 <header className="App-header">
@@ -168,10 +198,18 @@ class App extends Component {
                     <Divider/>
                     <div>
                         <div>
-                            <input type="file" onChange={this.onFileChange}/>
-                            <button onClick={this.onFileUpload}>
-                                Upload
-                            </button>
+                            <Upload {...props}>
+                                <Button icon={<UploadOutlined />}>Select File</Button>
+                            </Upload>
+                            <Button
+                                type="primary"
+                                onClick={this.onFileUpload}
+                                disabled={selectedFile === null}
+                                loading={uploading}
+                                
+                            >
+                                {uploading ? 'Uploading' : 'Start Upload'}
+                            </Button>
                         </div>
                         <Divider/>
                         <div>
