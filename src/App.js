@@ -206,7 +206,7 @@ class App extends Component {
                                 onClick={this.onFileUpload}
                                 disabled={selectedFile === null}
                                 loading={uploading}
-                                
+
                             >
                                 {uploading ? 'Uploading' : 'Start Upload'}
                             </Button>
